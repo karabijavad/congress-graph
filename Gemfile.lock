@@ -1,0 +1,13 @@
+PATH
+  remote: ~/cadet
+  specs:
+    cadet (0.0.6-java)
+
+GEM
+  specs:
+
+PLATFORMS
+  java
+
+DEPENDENCIES
+  cadet!

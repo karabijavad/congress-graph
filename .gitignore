@@ -1,0 +1,4 @@
+.bundle/
+neo4j*/
+data/*
+!data/README.md
