@@ -1,5 +1,6 @@
-PATH
-  remote: ~/cadet
+GIT
+  remote: git://github.com/karabijavad/cadet.git
+  revision: 5514def1c55019dba508ff05c0deee0cbfe151d2
   specs:
     cadet (0.0.6-java)
 
