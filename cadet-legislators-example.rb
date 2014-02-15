@@ -47,7 +47,7 @@ YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |le
   end
 end
 
-Dir['data/**/bills/**/*.json'].each do |json_file|
+Dir['data/congress-data/*/bills/*/*/*.json'].each do |json_file|
   bill_data = JSON.parse(File.read(json_file))
   db.transaction do |tx|
     begin
