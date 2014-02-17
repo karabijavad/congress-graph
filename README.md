@@ -1,4 +1,4 @@
-note: this only works on jruby, as it uses the github.com/karabijavad/cadet gem, which accesses the neo4j java api.
+note: this only works on jruby, as it uses the http://github.com/karabijavad/cadet gem, which accesses the neo4j java api.
 
 ```
 ./bootstrap.sh
