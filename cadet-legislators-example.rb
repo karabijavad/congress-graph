@@ -15,6 +15,15 @@ db.transaction do
   db.constraint "Role", "name"
 end
 
+YAML.load_file('data/congress-legislators/committee-membership-current.yaml').each do |committee_data|
+  c = db.get_node "Committee", "thomas_id", committee_data[0].to_s
+
+  committee_data[1].each do |leg|
+    l = db.get_node "Legislator", "thomas_id", leg["thomas"].to_i
+    l.outgoing("member_of_committee") << c
+  end
+end
+
 YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
   db.transaction do
     l = db.get_node "Legislator", "thomas_id", leg["id"]["thomas"].to_i
