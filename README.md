@@ -1,3 +1,5 @@
+note: this only works on jruby, as it uses the http://github.com/karabijavad/cadet gem, which accesses the neo4j java api.
+
 ```
 ./bootstrap.sh
 ./run.sh
