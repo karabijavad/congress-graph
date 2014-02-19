@@ -59,8 +59,25 @@ YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |le
 end
 
 puts "loading bills"
+file_queue = Queue.new
+data_queue = SizedQueue.new(16)
+Thread.abort_on_exception = true
+
+1.upto(8).map do
+  Thread.new do
+    while json_file = file_queue.pop rescue nil
+      data_queue << JSON.parse(File.read(json_file))
+    end
+  end
+end
+
 Dir['data/congress-data/*/bills/*/*/*.json'].each do |json_file|
-  bill_data = JSON.parse(File.read(json_file))
+  file_queue.push json_file
+end
+
+until file_queue.empty? && data_queue.empty?
+  bill_data = data_queue.pop
+
   db.transaction do |tx|
     begin
       bill = db.get_node :Bill, :id, bill_data["bill_id"]
