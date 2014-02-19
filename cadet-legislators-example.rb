@@ -15,6 +15,7 @@ db.transaction do
   db.constraint :Role,       :name
 end
 
+puts "loading committees"
 YAML.load_file('data/congress-legislators/committee-membership-current.yaml').each do |committee_data|
   c = db.get_node :Committee, :thomas_id, committee_data[0].to_s
 
@@ -24,30 +25,31 @@ YAML.load_file('data/congress-legislators/committee-membership-current.yaml').ea
   end
 end
 
+puts "loading legislators"
 YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
   db.transaction do
-    l = db.get_node :Legislator, :thomas_id, leg["id"]["thomas"].to_i
+    l = db.get_node(:Legislator, :thomas_id, leg["id"]["thomas"].to_i)
 
     if leg["bio"]["gender"]
-      gender = db.get_node :Gender, :name, leg["bio"]["gender"]
+      gender = db.get_node(:Gender, :name, leg["bio"]["gender"])
       l.outgoing(:gender) << gender
     end
 
     if leg["bio"]["religion"]
-      religion = db.get_node :Religion, :name, leg["bio"]["religion"]
+      religion = db.get_node(:Religion, :name, leg["bio"]["religion"])
       l.outgoing(:religion) << religion
     end
 
     leg["terms"].each do |term|
       t = db.create_node(:Term, :start, term["start"][0...4].to_i)
 
-      party = db.get_node :Party, :name, term["party"]
+      party = db.get_node(:Party, :name, term["party"])
       t.outgoing(:party)      << party
 
-      state = db.get_node :State, :name, term["state"]
+      state = db.get_node(:State, :name, term["state"])
       t.outgoing(:represents) << state
 
-      role = db.get_node :Role, :name, term["type"]
+      role = db.get_node(:Role, :name, term["type"])
       t.outgoing(:role)       << role
 
       l.outgoing(:term) << t
@@ -56,7 +58,8 @@ YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |le
   end
 end
 
-Dir['data/congress-data/{112,113}/bills/*/*/*.json'].each do |json_file|
+puts "loading bills"
+Dir['data/congress-data/*/bills/*/*/*.json'].each do |json_file|
   bill_data = JSON.parse(File.read(json_file))
   db.transaction do |tx|
     begin
