@@ -28,31 +28,15 @@ puts "loading legislators"
 YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
     l = db.get_node(:Legislator, :thomas_id, leg["id"]["thomas"].to_i)
 
-    if leg["bio"]["gender"]
-      gender = db.get_node(:Gender, :name, leg["bio"]["gender"])
-      l.outgoing(:gender) << gender
-    end
-
-    if leg["bio"]["religion"]
-      religion = db.get_node(:Religion, :name, leg["bio"]["religion"])
-      l.outgoing(:religion) << religion
-    end
+    l.outgoing(:gender)   << db.get_node(:Gender, :name, leg["bio"]["gender"])     if leg["bio"]["gender"]
+    l.outgoing(:religion) << db.get_node(:Religion, :name, leg["bio"]["religion"]) if leg["bio"]["religion"]
 
     leg["terms"].each do |term|
       t = db.create_node_with(:Term, {:start => term["start"].gsub(/-/, '').to_i, :end => term["end"].gsub(/-/, '').to_i})
 
-      party = db.get_node(:Party, :name, term["party"])
-      t.outgoing(:party)      << party
-
-      district = db.get_node(:District, :district, term["district"].to_i)
-      state    = db.get_node(:State, :name, term["state"])
-      district.outgoing(:state) << state
-
-      t.outgoing(:represents) << district
-      district.outgoing(:state) << db.get_node(:State, :name, term["state"])
-
-      role = db.get_node(:Role, :name, term["type"])
-      t.outgoing(:role)       << role
+      t.outgoing(:party) << db.get_node(:Party, :name, term["party"])
+      t.outgoing(:state) << db.get_node(:State, :name, term["state"])
+      t.outgoing(:role)  << db.get_node(:Role, :name, term["type"])
 
       l.outgoing(:term) << t
     end
@@ -79,18 +63,13 @@ until file_queue.empty? && data_queue.empty?
   bill_data = data_queue.pop
 
     begin
-      bill = db.get_node(:Bill, :id, bill_data["bill_id"])
-      bill["official_title"] = bill_data["official_title"].to_s
+      bill = db.create_node_with(:Bill, { id: bill_data["bill_id"], official_title: bill_data["official_title"].to_s } , :id)
 
-      sponsor = db.get_node(:Legislator, :thomas_id, bill_data["sponsor"]["thomas_id"].to_i)
-      bill.outgoing(:sponsor) << sponsor
-
-      congress = db.get_node(:Congress, :number, bill_data["congress"].to_i)
-      bill.outgoing(:congress) << congress
+      bill.outgoing(:sponsor)  << db.get_node(:Legislator, :thomas_id, bill_data["sponsor"]["thomas_id"].to_i)
+      bill.outgoing(:congress) << db.get_node(:Congress, :number, bill_data["congress"].to_i)
 
       bill_data["cosponsors"].each do |cosponsor|
-        cosponsor = db.get_node(:Legislator, :thomas_id, cosponsor["thomas_id"].to_i)
-        bill.outgoing(:cosponsor) << cosponsor
+        bill.outgoing(:cosponsor) << db.get_node(:Legislator, :thomas_id, cosponsor["thomas_id"].to_i)
       end
     rescue Exception => e
       # tx.failure
