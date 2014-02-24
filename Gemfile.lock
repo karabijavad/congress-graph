@@ -1,8 +1,8 @@
 GIT
   remote: git://github.com/karabijavad/cadet.git
-  revision: afcac3f15af3e32eb9b012b13c4acab8debe0efd
+  revision: c2d9aed0c4eb4d0afc793ad7fb7fddc3c3682ec2
   specs:
-    cadet (0.0.6-java)
+    cadet (0.0.7-java)
 
 GEM
   specs:
