@@ -23,26 +23,28 @@ db.constraint :District,   :district
 
 puts "loading committees"
 YAML.load_file('data/congress-legislators/committee-membership-current.yaml').each do |committee_data|
-  c = db.get_node(:Committee, :thomas_id, committee_data[0].to_s)
+  c = db.get_node :Committee, :thomas_id,  committee_data[0].to_s
 
+  committee_members = c.outgoing(:member)
   committee_data[1].each do |leg|
-    db.get_node(:Legislator, :thomas_id, leg["thomas"].to_i).outgoing(:member_of_committee) << c
+    l = db.get_node(:Legislator, :thomas_id, leg["thomas"].to_i)
+    committee_members << l
   end
 end
 
 puts "loading legislators"
 YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
-    l = db.get_node(:Legislator, :thomas_id, leg["id"]["thomas"].to_i)
+    l = db.get_node :Legislator, :thomas_id,  leg["id"]["thomas"].to_i
 
-    l.outgoing(:gender)   << db.get_node(:Gender,   :name, leg["bio"]["gender"])   if leg["bio"]["gender"]
+    l[:gender] = leg["bio"]["gender"] if leg["bio"]["gender"]
     l.outgoing(:religion) << db.get_node(:Religion, :name, leg["bio"]["religion"]) if leg["bio"]["religion"]
 
     leg["terms"].each do |term|
       t = db.create_node_with(:Term, {:start => term["start"].gsub(/-/, '').to_i, :end => term["end"].gsub(/-/, '').to_i})
 
-      t.outgoing(:party) << db.get_node(:Party, :name, term["party"])
-      t.outgoing(:state) << db.get_node(:State, :name, term["state"])
-      t.outgoing(:role)  << db.get_node(:Role,  :name, term["type"])
+      t.outgoing(:party)      << db.get_node(:Party, :name, term["party"])
+      t.outgoing(:represents) << db.get_node(:State, :name, term["state"])
+      t.outgoing(:role)       << db.get_node(:Role,  :name, term["type"])
 
       l.outgoing(:term) << t
     end
@@ -61,25 +63,36 @@ Thread.abort_on_exception = true
   end
 end
 
-Dir['data/congress-data/*/bills/*/*/*.json'].each do |json_file|
-  file_queue.push json_file
-end
+Dir['data/congress-data/*/bills/*/*/*.json'].each { |f| file_queue.push f }
 
 until file_queue.empty? && data_queue.empty?
   bill_data = data_queue.pop
 
-    begin
-      bill = db.create_node_with(:Bill, { id: bill_data["bill_id"], official_title: bill_data["official_title"].to_s } , :id)
+  begin
+    bill = db.create_node_with(:Bill, {
+      id:             bill_data["bill_id"],
+      official_title: bill_data["official_title"].to_s,
+      summary:        (bill_data["summary"] && bill_data["summary"]["text"].to_s) || ""
+     }, :id)
 
-      bill.outgoing(:sponsor)  << db.get_node(:Legislator, :thomas_id, bill_data["sponsor"]["thomas_id"].to_i)
-      bill.outgoing(:congress) << db.get_node(:Congress,   :number,    bill_data["congress"].to_i)
+    bill.outgoing(:congress) << db.get_node(:Congress, :number,       bill_data["congress"].to_i)
 
-      bill_data["cosponsors"].each do |cosponsor|
-        bill.outgoing(:cosponsor) << db.get_node(:Legislator, :thomas_id, cosponsor["thomas_id"].to_i)
-      end
-    rescue Exception => e
-      # tx.failure
+    if sponsor = bill_data["sponsor"]
+      bill.outgoing(:sponsor) <<  db.get_node(:Legislator, :thomas_id,  sponsor["thomas_id"].to_i)
     end
+
+    cosponsors = bill.outgoing(:cosponsor)
+    bill_data["cosponsors"].each do |cosponsor|
+       cosponsors << db.get_node(:Legislator, :thomas_id, cosponsor["thomas_id"].to_i)
+    end
+
+    subjects = bill.outgoing(:subject)
+    bill_data["subjects"].each do |subject|
+      subjects << db.get_node(:Subject, :name, subject)
+    end
+  rescue Exception => e
+    puts bill_data
+  end
 end
 
 db.close
