@@ -24,3 +24,37 @@ bills are related to legislators
 ```
 (:Legislator)<-[:sponsor]-(:Bill)-[:cosponsor]->(:Legislator)
 ```
+
+what subjects are each religion most sponsoring?
+```
+neo4j-sh (?)$ MATCH (r:Religion) WITH r MATCH r<-[:religion]-()<-[:sponsor]-(b)-[:subject]->(s) RETURN r.name, s.name, count(s.name) AS score ORDER BY score desc LIMIT 25;
++----------------------------------------------------------------------+
+| r.name           | s.name                                    | score |
++----------------------------------------------------------------------+
+| "Roman Catholic" | "Government operations and politics"      | 3835  |
+| "Roman Catholic" | "Congress"                                | 2249  |
+| "Roman Catholic" | "Economics and public finance"            | 2218  |
+| "Jewish"         | "Government operations and politics"      | 2217  |
+| "Roman Catholic" | "Health"                                  | 2141  |
+| "Roman Catholic" | "Law"                                     | 1904  |
+| "Roman Catholic" | "Commerce"                                | 1796  |
+| "Baptist"        | "Government operations and politics"      | 1653  |
+| "Episcopalian"   | "Government operations and politics"      | 1615  |
+| "Roman Catholic" | "International affairs"                   | 1594  |
+| "Roman Catholic" | "Labor and employment"                    | 1589  |
+| "Roman Catholic" | "Social welfare"                          | 1532  |
+| "Jewish"         | "Health"                                  | 1519  |
+| "Presbyterian"   | "Government operations and politics"      | 1517  |
+| "Roman Catholic" | "Foreign trade and international finance" | 1470  |
+| "Roman Catholic" | "Crime and law enforcement"               | 1445  |
+| "Roman Catholic" | "Education"                               | 1419  |
+| "Roman Catholic" | "Congressional reporting requirements"    | 1373  |
+| "Roman Catholic" | "Science, technology, communications"     | 1367  |
+| "Catholic"       | "Government operations and politics"      | 1356  |
+| "Jewish"         | "Economics and public finance"            | 1282  |
+| "Roman Catholic" | "Armed forces and national security"      | 1275  |
+| "Roman Catholic" | "Finance and financial sector"            | 1216  |
+| "Roman Catholic" | "Families"                                | 1213  |
+| "Roman Catholic" | "Taxation"                                | 1197  |
++----------------------------------------------------------------------+
+```
