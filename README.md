@@ -58,3 +58,20 @@ neo4j-sh (?)$ MATCH (r:Religion) WITH r MATCH r<-[:religion]-()<-[:sponsor]-(b)-
 | "Roman Catholic" | "Taxation"                                | 1197  |
 +----------------------------------------------------------------------+
 ```
+
+```
+MATCH (ca:Committee)-[:member]->(l:Legislator)<-[:sponsor]-(b:Bill)-[:subject_top_term]->(s)
+WITH ca.name as Committee, s.name as Bill_Subject, count(s) as count order by count desc LIMIT 10
+RETURN Committee + " sponsored " + Bill_Subject + " " + count + " times."
+
+Senate Committee on Finance sponsored Foreign trade and international finance 1275 times.
+Health sponsored Health 1142 times.
+House Committee on Energy and Commerce sponsored Health 1135 times.
+House Committee on Ways and Means sponsored Taxation 962 times.
+Senate Committee on Finance sponsored Health 960 times.
+Health Care sponsored Foreign trade and international finance 921 times.
+Oversight and Investigations sponsored Health 848 times.
+Taxation and IRS Oversight sponsored Foreign trade and international finance 826 times.
+House Committee on Foreign Affairs sponsored International affairs 802 times.
+Environment and the Economy sponsored Health 771 times.
+```

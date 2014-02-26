@@ -23,7 +23,52 @@ db.constraint :District,   :district
 db.constraint :Subject,    :name
 db.constraint :Committee,  :thomas_id
 
+puts "loading legislators"
+YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
+    l = db.create_node_with(:Legislator, {
+        thomas_id: leg["id"]["thomas"].to_i,
+        gender:    leg["bio"]["gender"],
+        name:      "#{leg['name']['first']} #{leg['name']['last']}"
+      }, :thomas_id)
+
+    l.outgoing(:religion) << db.get_node(:Religion, :name, leg["bio"]["religion"]) if leg["bio"]["religion"]
+
+    leg["terms"].each do |term|
+      t = db.create_node_with(:Term, {:role => term["type"], :start => term["start"].gsub(/-/, '').to_i, :end => term["end"].gsub(/-/, '').to_i})
+
+      t.outgoing(:party)      << db.get_node(:Party, :name, term["party"])
+      t.outgoing(:represents) << db.get_node(:State, :name, term["state"])
+
+      l.outgoing(:term) << t
+    end
+
+    legislator_parties = l.outgoing(:hyper_party)
+    leg["terms"].map { |term| term["party"]}.each do |party|
+       legislator_parties << db.get_node(:Party, :name, party)
+    end
+end
+
 puts "loading committees"
+YAML.load_file('data/congress-legislators/committees-current.yaml').each do |committee_data|
+
+  committee = db.create_node_with(:Committee, {
+    name:         committee_data["name"],
+    thomas_id:    committee_data["thomas_id"]
+  }, :thomas_id)
+
+  if committee_data["subcommittees"]
+    committee_subcommittees = committee.outgoing(:subcommittee)
+
+    committee_data["subcommittees"].each do |subcommittee_data|
+      committee_subcommittees << db.create_node_with(:Committee, {
+        name:         subcommittee_data["name"],
+        thomas_id:    "#{committee_data['thomas_id']}#{subcommittee_data['thomas_id']}"
+      }, :thomas_id)
+    end
+  end
+end
+
+puts "loading committee memberships"
 YAML.load_file('data/congress-legislators/committee-membership-current.yaml').each do |committee_data|
   c = db.get_node :Committee, :thomas_id,  committee_data[0].to_s
 
@@ -32,24 +77,6 @@ YAML.load_file('data/congress-legislators/committee-membership-current.yaml').ea
     l = db.get_node(:Legislator, :thomas_id, leg["thomas"].to_i)
     committee_members << l
   end
-end
-
-puts "loading legislators"
-YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
-    l = db.get_node :Legislator, :thomas_id,  leg["id"]["thomas"].to_i
-
-    l[:gender] = leg["bio"]["gender"] if leg["bio"]["gender"]
-    l.outgoing(:religion) << db.get_node(:Religion, :name, leg["bio"]["religion"]) if leg["bio"]["religion"]
-
-    leg["terms"].each do |term|
-      t = db.create_node_with(:Term, {:start => term["start"].gsub(/-/, '').to_i, :end => term["end"].gsub(/-/, '').to_i})
-
-      t.outgoing(:party)      << db.get_node(:Party, :name, term["party"])
-      t.outgoing(:represents) << db.get_node(:State, :name, term["state"])
-      t.outgoing(:role)       << db.get_node(:Role,  :name, term["type"])
-
-      l.outgoing(:term) << t
-    end
 end
 
 puts "loading bills"
@@ -92,8 +119,8 @@ until file_queue.empty? && data_queue.empty?
     bill_data["subjects"].each do |subject|
       subjects << db.get_node(:Subject, :name, subject)
     end
+    bill.outgoing(:subject_top_term) << db.get_node(:Subject, :name, bill_data["subjects_top_term"]) if bill_data["subjects_top_term"]
   rescue Exception => e
-    puts bill_data
   end
 end
 
