@@ -20,6 +20,8 @@ db.constraint :Party,      :name
 db.constraint :State,      :name
 db.constraint :Role,       :name
 db.constraint :District,   :district
+db.constraint :Subject,    :name
+db.constraint :Committee,  :thomas_id
 
 puts "loading committees"
 YAML.load_file('data/congress-legislators/committee-membership-current.yaml').each do |committee_data|
