@@ -20,11 +20,11 @@ db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").d
   puts "loading legislators"
   YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
     transaction do
-      l = create_Legislator_on_thomas_id({
+      l = create_Legislator({
           thomas_id: leg["id"]["thomas"].to_i,
           gender:    leg["bio"]["gender"],
           name:      "#{leg['name']['first']} #{leg['name']['last']}"
-      })
+      }, :thomas_id)
 
       l.religion_to Religion_by_name(leg["bio"]["religion"]) if leg["bio"]["religion"]
 
@@ -46,17 +46,17 @@ db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").d
   puts "loading committees"
   YAML.load_file('data/congress-legislators/committees-current.yaml').each do |committee_data|
     transaction do
-      committee = create_Committee_on_thomas_id({
+      committee = create_Committee({
         name:         committee_data["name"],
         thomas_id:    committee_data["thomas_id"]
-      })
+      }, :thomas_id)
 
       if subcommittees = committee_data["subcommittees"]
         subcommittees.each do |subcommittee_data|
-          committee.subcommittee_to create_Committee_on_thomas_id({
+          committee.subcommittee_to create_Committee({
             name:         subcommittee_data["name"],
             thomas_id:    "#{committee_data['thomas_id']}#{subcommittee_data['thomas_id']}"
-          })
+          }, :thomas_id)
         end
       end
     end
@@ -92,11 +92,11 @@ db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").d
     transaction do
       bill_data = data_queue.pop
 
-      bill = create_Bill_on_id({
+      bill = create_Bill({
         id:             bill_data["bill_id"],
         official_title: bill_data["official_title"].to_s,
         summary:        (bill_data["summary"] && bill_data["summary"]["text"].to_s) || ""
-       })
+       }, :id)
 
       bill.congress_to Congress_by_number(bill_data["congress"].to_i)
 
