@@ -29,7 +29,7 @@ db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").d
       l.religion_to Religion_by_name(leg["bio"]["religion"]) if leg["bio"]["religion"]
 
       leg["terms"].each do |term|
-        t = create_node_with(:Term, {:role => term["type"], :start => term["start"].gsub(/-/, '').to_i, :end => term["end"].gsub(/-/, '').to_i})
+        t = create_Term({:role => term["type"], :start => term["start"].gsub(/-/, '').to_i, :end => term["end"].gsub(/-/, '').to_i})
 
         t.party_to      Party_by_name(term["party"])
         t.represents_to State_by_name(term["state"])
