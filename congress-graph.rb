@@ -2,7 +2,7 @@ require 'cadet'
 require 'yaml'
 require 'json'
 
-db = Cadet::Session.open("neo4j-community-2.0.1/data/graph.db").dsl do
+db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").dsl do
 
   transaction do
     constraint :Legislator, :thomas_id
