@@ -2,7 +2,7 @@ require 'cadet'
 require 'yaml'
 require 'json'
 
-db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").dsl do
+Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
 
   transaction do
     constraint :Legislator, :thomas_id
@@ -114,10 +114,5 @@ db = Cadet::BatchInserter::Session.open("neo4j-community-2.0.1/data/graph.db").d
       bill.subject_top_term_to Subject_by_name(bill_data["subjects_top_term"]) if bill_data["subjects_top_term"]
     end
   end
+
 end
-
-puts "closing database"
-
-db.close
-
-puts "database closed"
