@@ -24,6 +24,8 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
       l[:gender] = leg["bio"]["gender"]
       l[:name]   = "#{leg['name']['first']} #{leg['name']['last']}"
 
+      l.gender_to Gender_by_name(leg["bio"]["gender"]) if leg["bio"]["gender"]
+
       l.religion_to Religion_by_name(leg["bio"]["religion"]) if leg["bio"]["religion"]
 
       leg["terms"].each do |term|
