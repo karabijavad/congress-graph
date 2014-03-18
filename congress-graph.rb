@@ -75,10 +75,10 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
 
   puts "loading bills"
   file_queue = Queue.new
-  data_queue = SizedQueue.new(16)
+  data_queue = SizedQueue.new(100)
   Thread.abort_on_exception = true
 
-  1.upto(8).map do
+  1.upto(32).map do
     Thread.new do
       while json_file = file_queue.pop rescue nil
         data_queue << JSON.parse(File.read(json_file))
@@ -86,7 +86,7 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
     end
   end
 
-  Dir['data/congress-data/*/bills/*/*/*.json'].each { |f| file_queue.push f }
+  Dir['data/congress-data/{109,110,111,112,113}/bills/*/*/*.json'].each { |f| file_queue.push f }
 
   until file_queue.empty? && data_queue.empty?
     transaction do
