@@ -35,7 +35,7 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
         l.term_to t
       end
 
-      leg["terms"].map { |term| term["party"]}.each do |party|
+      leg["terms"].map { |term| term["party"]}.uniq.each do |party|
          l.hyper_party_to Party_by_name(party)
       end
     end
@@ -47,8 +47,8 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
       committee = Committee_by_thomas_id(committee_data["thomas_id"])
       committee[:name] = committee_data["name"]
 
-      if subcommittees = committee_data["subcommittees"]
-        subcommittees.each do |subcommittee_data|
+      if committee_data["subcommittees"]
+        committee_data["subcommittees"].each do |subcommittee_data|
           sc = Committee_by_thomas_id("#{committee_data['thomas_id']}#{subcommittee_data['thomas_id']}")
           committee.subcommittee_to sc
           sc[:name] = subcommittee_data["name"]
