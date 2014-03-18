@@ -1,7 +1,7 @@
 PATH
   remote: ../cadet
   specs:
-    cadet (0.0.9-java)
+    cadet (0.1.0-java)
 
 GEM
   specs:
