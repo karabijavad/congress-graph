@@ -20,11 +20,9 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
   puts "loading legislators"
   YAML.load_file('data/congress-legislators/legislators-current.yaml').each do |leg|
     transaction do
-      l = create_Legislator({
-          thomas_id: leg["id"]["thomas"].to_i,
-          gender:    leg["bio"]["gender"],
-          name:      "#{leg['name']['first']} #{leg['name']['last']}"
-      }, :thomas_id)
+      l = Legislator_by_thomas_id(leg["id"]["thomas"].to_i)
+      l[:gender] = leg["bio"]["gender"]
+      l[:name]   = "#{leg['name']['first']} #{leg['name']['last']}"
 
       l.religion_to Religion_by_name(leg["bio"]["religion"]) if leg["bio"]["religion"]
 
@@ -46,17 +44,14 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
   puts "loading committees"
   YAML.load_file('data/congress-legislators/committees-current.yaml').each do |committee_data|
     transaction do
-      committee = create_Committee({
-        name:         committee_data["name"],
-        thomas_id:    committee_data["thomas_id"]
-      }, :thomas_id)
+      committee = Committee_by_thomas_id(committee_data["thomas_id"])
+      committee[:name] = committee_data["name"]
 
       if subcommittees = committee_data["subcommittees"]
         subcommittees.each do |subcommittee_data|
-          committee.subcommittee_to create_Committee({
-            name:         subcommittee_data["name"],
-            thomas_id:    "#{committee_data['thomas_id']}#{subcommittee_data['thomas_id']}"
-          }, :thomas_id)
+          sc = Committee_by_thomas_id("#{committee_data['thomas_id']}#{subcommittee_data['thomas_id']}")
+          committee.subcommittee_to sc
+          sc[:name] = subcommittee_data["name"]
         end
       end
     end
@@ -92,11 +87,9 @@ Cadet::BatchInserter::Session.open "neo4j-community-2.0.1/data/graph.db" do
     transaction do
       bill_data = data_queue.pop
 
-      bill = create_Bill({
-        id:             bill_data["bill_id"],
-        official_title: bill_data["official_title"].to_s,
-        summary:        (bill_data["summary"] && bill_data["summary"]["text"].to_s) || ""
-       }, :id)
+      bill = Bill_by_id bill_data["bill_id"]
+      bill[:official_title] = bill_data["official_title"].to_s
+      bill[:summary]        = bill_data["summary"]["text"].to_s if bill_data["summary"]
 
       bill.congress_to Congress_by_number(bill_data["congress"].to_i)
 
