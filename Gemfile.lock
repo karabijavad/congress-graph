@@ -1,7 +1,8 @@
-PATH
-  remote: ../cadet
+GIT
+  remote: git://github.com/karabijavad/cadet.git
+  revision: a750003743d2684563a32acb5faba93dc7876740
   specs:
-    cadet (0.1.4-java)
+    cadet (0.1.5-java)
 
 GEM
   specs:
