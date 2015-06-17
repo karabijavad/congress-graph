@@ -3,7 +3,7 @@ note: this only works on jruby, as it uses the http://github.com/karabijavad/cad
 ```
 ./bootstrap.sh
 ./run.sh
-neo4j-community-2.0.1/bin/neo4j start
+neo4j-community-2.3.0-M02/bin/neo4j start
 ```
 
 then, try these queries out:
